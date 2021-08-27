@@ -1,5 +1,5 @@
 ---
-title: "Regresi Terboboti Grafis (Geographical Weighted Regression)"
+title: "Regresi Terboboti Grafis (Geographical Weighted Regression (GWR))"
 author: "Inayatus, Fafilia, Risman"
 date: "`r format(Sys.Date(), '%e %b, %Y')`"
 output: 
@@ -62,18 +62,22 @@ library(sp)
 
 # Pengenalan Geographical Weighted Regression (GWR)
 
-Analisis regresi adalah metode statistika paling umum dan sederhana yang digunakan untuk memprediksi sebuah nilai(numerik) secara supervised learning. Metode ini banyak diaplikasikan untuk menyelesaikan permasalahan umum di bidang ekonomi ataupun bidang keilmuan lainnya. Metode regresi pada umumnya mempertimbangkan berbagai nilai numerik ataupun kategorik sebagai data pendukung untuk memprediksi nilai target. Pada kasus tertentu, kita juga bisa menambahkan data spasial untuk digunakan dalam analisis regresi. Berbeda dengan regresi pada umumnya, dalam hal ini regresi nantinya akan mempertimbangkan aspek kewilayahan yang memberikan pengaruh lingkungan dan karakteristik yang muncul dari suatu wilayah. 
+Analisis regresi adalah metode statistika paling umum dan sederhana yang digunakan untuk memprediksi sebuah nilai numerik berdasarkan variabel prediktornya. Metode ini banyak diaplikasikan untuk menyelesaikan permasalahan umum di berbagai bidang. Metode regresi pada umumnya mempertimbangkan berbagai variabel numerik ataupun kategorik sebagai data pendukung untuk memprediksi variabel target. Pada kasus tertentu, kita juga bisa menambahkan data spasial untuk digunakan dalam analisis regresi. Berbeda dengan regresi pada umumnya, dalam hal ini regresi nantinya akan mempertimbangkan aspek kewilayahan yang memberikan pengaruh lingkungan dan karakteristik yang muncul dari suatu wilayah. 
 
-Data spasial sendiri adalah data cross-section yang memiliki struktur geografis berupa longitude dan latitude dan dapat divisualisasikan dalam bentuk peta. Berdasarkan Hukum I Tobler, segala sesuatu saling berhubungan satu dengan yang lainnya, tetapi sesuatu yang lebih berdekatan akan lebih berpengaruh daripada sesuatu yang jauh. Hukum Tobler digunakan sebagai pilar analisis data spasial. Pada data spasial, seringkali pengamatan di suatu lokasi bergantung pada pengamatan di lokasi lain yang berdekatan.
+Data spasial sendiri adalah data *cross-section* yang memiliki struktur geografis berupa *longitude* dan latitude dan dapat divisualisasikan dalam bentuk peta. Berdasarkan Hukum I Tobler, segala sesuatu saling berhubungan satu dengan yang lainnya, tetapi sesuatu yang lebih berdekatan akan lebih berpengaruh daripada sesuatu yang jauh[^1]. Hukum Tobler digunakan sebagai pilar analisis data spasial. Pada data spasial, seringkali pengamatan di suatu lokasi bergantung pada pengamatan di lokasi lain yang berdekatan.
 
-Regresi Terboboti Geografis (RTG) adalah metode yang dapat digunakan untuk menganalisis aspek heterogenitas spasial antar variabel. Model regresi terboboti geografis berangkat dari model regresi linear klasik dengan melibatkan hubungan antar variabel berdasarkan aspek ruang. Model yang dihasilkan menggunakan regresi linear klasik merupakan model global yang berarti pendugaan parameter yang dihasilkan berlaku untuk seluruh observasi. Regresi linear klasik dengan Ordinary Least Square (OLS) tidak mempertimbangkan aspek ruang atau efek spasial yang timbul. Hal ini dapat mengakibatkan interpretasi yang keliru terhadap model yang dihasilkan. Simpson’s Paradox adalah salah satu fenomena yang muncul pada kasus statistik yang dapat mengakibatkan kekeliruan pengambilan kesimpulan. Fenomena ini terjadi ketika suatu group data yang dianalisis antara secara terpisah dan secara penggabungan memiliki hasil yang kontradiktif.
+*Geographical weighted regression* (GWR) adalah metode yang dapat digunakan untuk menganalisis aspek heterogenitas spasial antar data. Model regresi terboboti geografis berangkat dari model regresi linear klasik dengan melibatkan hubungan antar variabel berdasarkan aspek ruang. Model yang dihasilkan menggunakan regresi linear klasik merupakan model global yang berarti pendugaan parameter yang dihasilkan berlaku untuk seluruh observasi. Regresi linear klasik dengan *Ordinary Least Square* (OLS) tidak mempertimbangkan aspek ruang atau efek spasial yang timbul. Hal ini dapat mengakibatkan interpretasi yang keliru terhadap model yang dihasilkan. Simpson’s Paradox adalah salah satu fenomena yang muncul pada kasus statistik yang dapat mengakibatkan kekeliruan pengambilan kesimpulan[^2]. Fenomena ini terjadi ketika suatu kelompok data yang dianalisis secara terpisah dan secara penggabungan memiliki hasil yang kontradiktif.
 
 [**Simpson's Paradox**](https://anatomisebiostats.com/biostatistics-blog/simpsons-paradox-hidden-bias/)
 
-<img src="https://anatomisebiostats.com/wp-content/uploads/2020/10/simpsons-paradox-in-correlation-and-linear-regression_orig.gif" width = "600">
+```{r echo=FALSE}
+knitr::include_graphics("assets/Simpson's Paradox.gif")
+```
+
 
 Dalam pemodelan kasus regresi linear klasik yang melibatkan ruang, model yang dihasilkan dapat berhadapan dengan Simpson's Paradox karena bersinggungan dengan data yang melalui agregasi. Setiap observasi dalam pemodelan regresi yang melibatkan ruang memiliki kemungkinan menghasilkan pendugaan parameter yang berbeda ketika pemodelan yang dilakukan bersifat global.
-Regresi terboboti geografis dapat menangani permasalahan yang muncul akibat misinterpretasi saat melakukan pemodelan regresi linear klasik karena adanya keragaman spasial dalam data[^1]. Output yang muncul pada pemodelan regresi terboboti spasial adalah setiap observasi yang berbasis ruang memiliki model regresi masing-masing.
+
+Regresi terboboti geografis dapat menangani permasalahan yang muncul akibat misinterpretasi saat melakukan pemodelan regresi linear klasik karena adanya keragaman spasial dalam data[^3]. Output yang muncul pada pemodelan regresi terboboti spasial adalah setiap observasi yang berbasis ruang memiliki model regresi masing-masing.
 
 ```{r echo=FALSE}
 knitr::include_graphics("assets/gwr.PNG")
@@ -82,11 +86,9 @@ knitr::include_graphics("assets/gwr.PNG")
 
 Model regresi global dapat dinyatakan sebagai berikut:
 
-
 $$y_{i} = \beta_{0} + \sum_{k=1}^p \beta_{k}x_{ik} + \varepsilon_{i}$$
 
-
-Melalui regresi terboboti geografis, model regresi tersebut dapat digunakan untuk menduga parameter lokal dengan model umum sebagai berikut:
+Melalui GWR, model regresi tersebut dapat digunakan untuk menduga parameter lokal dengan model umum sebagai berikut:
 
 
 $$y_{i} = \beta_{0}(u_{i},v_{i}) + \sum_{k=1}^p \beta_{k}(u_{i},v_{i})x_{ik} + \varepsilon_{i}$$
@@ -99,7 +101,7 @@ dengan:
 * $\varepsilon_{i}$        : Nilai residual regresi antara variabel prediktor dengan variabel target di lokasi ke-$i$
 
 
-Model regresi yang dihasilkan melalui RTG berguna ketika hendak dilakukan eksplorasi suatu variabel beserta pengambilan keputusannya pada daerah tersebut berdasarkan variabel-variabel yang diteliti. Karena setiap daerah memiliki model masing-masing, maka pengambilan kebijakan pada satu daerah akan berbeda dengan daerah lainnya.
+Model regresi yang dihasilkan melalui GWR berguna ketika hendak dilakukan eksplorasi suatu variabel beserta pengambilan keputusannya pada daerah tersebut berdasarkan variabel-variabel yang diteliti. Karena setiap daerah memiliki model masing-masing, maka pengambilan kebijakan pada satu daerah akan berbeda dengan daerah lainnya.
 
 Untuk mendeteksi aspek keragaman spasial yang muncul dapat dilakukan menggunakan uji Breusch-Pagan dengan statistik uji sebagai berikut:
 
@@ -419,6 +421,7 @@ Berdasarkan ketersediaan rumah sakit dan poliklinik paling rendah terdapat pada 
 library(GGally)
 ggcorr(covid_clean, label = T, label_size = 2.9)
 ```
+
 # Modelan Regresi Global menggunakan Regresi Linear
 
 Sebelum dilakukan pemodelan dengan regresi terboboti geografis (GWR), akan dilakukan pemodelan dengan teknik multiple linear regression dengan Ordinary Least Square (OLS) untuk mendapatkan model global dari tingkat kematian akibat COVID-19 di Indonesia.
@@ -443,9 +446,10 @@ Variabel-variabel yang digunakan dalam pemodelan tidak menunjukan multikolineari
 library(performance)
 check_collinearity(model_lm)
 ```
+
 ## Uji Keragaman Spasial (Uji Heteroscedastisity)
 
-Dalam pemodelan regresi terboboti spasial (geographic weighted regression spatial / GWRs) kita perlu mengetahui apakah ada efek ketidakragaman (heterogen) pada eror model regresi linear. Ketika eror model terpenuhi ketidakragamannya artinya terdapat eek spasial pada data. Adanya efek spasial pada data artinya setiap daerah memiliki karakteristik masing-masing dalam mengidentifikasikan nilai dari variabel target. Adanya efek ketidakragaman pada data ini tidak dapat dimodelkan menggunakan model regresi linear biasa namun kita dapat memodelkannya menggunakan GWR model.
+Dalam pemodelan regresi terboboti spasial (geographic weighted regression / GWR) kita perlu mengetahui apakah ada efek ketidakragaman (heterogen) pada eror model regresi linear. Ketika eror model terpenuhi ketidakragamannya artinya terdapat efek spasial pada data. Adanya efek spasial pada data artinya setiap daerah memiliki karakteristik masing-masing dalam mengidentifikasikan nilai dari variabel target. Adanya efek ketidakragaman pada data ini tidak dapat dimodelkan menggunakan model regresi linear biasa namun kita dapat memodelkannya menggunakan GWR model.
 
 Untuk menguji ketidakragaman eror model kita dapat menggunakan uji Breuch-Pagan test (BP test) dengan hipotesis sebagai berikut:
 
@@ -482,6 +486,8 @@ class(id_map)
 
 Objek `id_map` yang kita miliki sudah dalam bentuk `sf` objek. Selanjutnya kita akan gabungkan file `shp` dengan data frame yang kita miliki.
 
+* Menggabungkan `sf` objek dengan data frame
+
 ```{r}
 library(sf)
 id_covid_data <- id_map %>% 
@@ -493,6 +499,8 @@ id_covid_data <- id_covid_data %>%
 
 Untuk mendapatkan titik koordinat pusat dari wilayah, kita dapat menggunakan fungsi `coordinates()`. Namun, sebelum itu kita akan ubah objek data kita yang sebelumnya merupakan `sf` objek menjadi spasial objek.
 
+* Mengubah `sf` objek menjadi spasial objek dan mencari titik koordinat
+
 ```{r}
 id_covid_sp <- as_Spatial(id_covid_data)
 titik_koordinat <- coordinates(id_covid_sp)
@@ -503,12 +511,12 @@ Untuk membuat GWR model kita akan menggunakan salah satu fungsi dari package `GW
 
 Formula yang akan kita gunakan untuk membuat pemodelan GWR mirip seperti membuat pemodelan regresi linear yaitu `y~x`.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(GWmodel)
 bandwidth_gwr <- bw.gwr(formula = Death_Rate ~ Pos_Rate + Recovery_Rate + Jumlah_Penduduk + Jumlah_RS + Jumlah_Poliklinik, data = id_covid_sp, kernel = "gaussian", adaptive = T)
 ```
 
-Pembobotan pada fungsi kernel Gaussian tersebut menggunakan bobot kernel adaptif yang berarti terdapat bandwidth yang berbeda pada setiap lokasi pengamatan. 
+Pembobotan pada fungsi kernel Gaussian tersebut menggunakan bobot kernel adaptif yang berarti terdapat bandwidth yang berbeda pada setiap lokasi pengamatan. Menggunakan 32 iterasi, kita memperoleh CV score sebesar 0.0703. Nilai CV score semakin kecil akan semakin baik.
 
 ```{r}
 model_gwr <- gwr.basic(formula = Death_Rate ~ Pos_Rate + Recovery_Rate + Jumlah_Penduduk + Jumlah_RS + Jumlah_Poliklinik, data = id_covid_sp, bw = bandwidth_gwr, kernel = "gaussian", adaptive = T)
@@ -732,7 +740,8 @@ peta_r2_lokal <- leaflet(id_gwr_clean) %>%
 peta_r2_lokal
 ```
 
-Nilai $R^2$ yang lebih tinggi berada di provinsi Kalimantan Timur, Kalimantan Selatan, dan provinsi yang terdapat pada pulau Sulawesi. Sebagai perbandingan, nilai $R^2$ di provinsi Kalimantan Selatan sebesar 68.74% yang bermakna variabel-variabel prediktor mampu menjelaskan keragaman tingkat kriminalitas sebesar 68.4% sedangkan sisanya dijelaskan diluar variabel prediktor. Hal ini berbeda dengan provinsi Banten yang memiliki $R^2$ lebih kecil yaitu 68.36%.
+Nilai $R^2$ yang lebih tinggi berada di provinsi Kalimantan Timur, Kalimantan Selatan, dan provinsi yang terdapat pada pulau Sulawesi. Sebagai perbandingan, nilai $R^2$ di provinsi Kalimantan Selatan sebesar 68.74% yang bermakna variabel-variabel prediktor mampu menjelaskan keragaman tingkat kematian sebesar 68.74% sedangkan sisanya dijelaskan diluar variabel prediktor. Hal ini berbeda dengan provinsi Banten yang memiliki $R^2$ lebih kecil yaitu 68.36%.
+
 
 # Kesimpulan
 
@@ -742,14 +751,18 @@ GWR baik digunakan ketika ingin melakukan eksplorasi serangkaian variabel terhad
 
 # Reference
 
-1. [Fotheringham AS, Brunsdon C, Charlton M. 2002. Geographically Weighted Regression : the Analysis of Spatially Varying Relationships. West Sussex 
+[^1]: [Hukum Tobler](https://osgis.org/2020/06/what-is-toblers-first-law-of-geography/)
+
+[^2]: [Simpson's Paradox](https://anatomisebiostats.com/biostatistics-blog/simpsons-paradox-hidden-bias/)
+
+[^3]: [Fotheringham AS, Brunsdon C, Charlton M. 2002. Geographically Weighted Regression : the Analysis of Spatially Varying Relationships. West Sussex 
 (UK): John Wiley and Sons LTD.]()
 
-2. [Create Choropleth](https://algotech.netlify.app/blog/creating-choropleth-with-mapshaper-and-r/)
+4. [Create Choropleth](https://algotech.netlify.app/blog/creating-choropleth-with-mapshaper-and-r/)
 
-3. [Zikalta P. 2019. Model Regresi Terboboti Geografis Temporal Kekar untuk Tingkat Kriminalitas di Provinsi Jawa Tengah dan Provinsi Jawa Timur.  [tesis]. Bogor (ID): Institut Pertanian Bogor.]()
+5. [Zikalta P. 2019. Model Regresi Terboboti Geografis Temporal Kekar untuk Tingkat Kriminalitas di Provinsi Jawa Tengah dan Provinsi Jawa Timur.  [tesis]. Bogor (ID): Institut Pertanian Bogor.]()
 
-4. [Simpson's Paradox](https://anatomisebiostats.com/biostatistics-blog/simpsons-paradox-hidden-bias/)
+6. [Simpson's Paradox](https://anatomisebiostats.com/biostatistics-blog/simpsons-paradox-hidden-bias/)
 
 
 
